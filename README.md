@@ -15,6 +15,9 @@ Philosophy: Make managing money “as easy as saying hello”—no stress, no co
 - Data saved in JSON—nothing is lost between sessions
 
 ## How to Use
+
+python floww.py
+
 When you first launch FLOWW, it asks for your monthly income and your savings goal,
 and then you’re good to go.
 

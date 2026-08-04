@@ -16,7 +16,9 @@ Philosophy: Make managing money “as easy as saying hello”—no stress, no co
 
 ## How to Use
 
+```
 python floww.py
+```
 
 When you first launch FLOWW, it asks for your monthly income and your savings goal,
 and then you’re good to go.
@@ -36,6 +38,6 @@ Pure Python, zero external dependencies. The data is stored in a local
 
 ## Background
 
-Project built as part of my Python learning journey
+Project built as part of my Python learning journey 90 days, 6 days a week, understanding every line of code. Building in public since day 67.
 
 

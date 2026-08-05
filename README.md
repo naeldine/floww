@@ -17,6 +17,7 @@ Philosophy: Make managing money “as easy as saying hello”—no stress, no co
 ## How to Use
 
 ```
+pip install matplotlib
 python floww.py
 ```
 
@@ -25,7 +26,7 @@ and then you’re good to go.
 
 ## Stack
 
-Pure Python, zero external dependencies. The data is stored in a local
+Python + matplotlib for charts. The data is stored in a local
 `floww.json` file (unversioned).
 
 ## Roadmap
@@ -33,11 +34,11 @@ Pure Python, zero external dependencies. The data is stored in a local
 - [x] Phase 1 — Terminal Core Loop
 - [x] Phase 2 — JSON Persistence
 - [x] Phase 3 — Projections and monthly history
-- [ ] Phase 4 — Graphical visualization (matplotlib)
+- [x] Phase 4 — Graphical visualization (matplotlib)
 - [ ] Phase 5 — Web interface (Flask)
 
 ## Background
 
-Project built as part of my Python learning journey 90 days, 6 days a week, understanding every line of code. Building in public since day 67.
+Project built as part of my Python learning journey: 90 days, 6 days a week, understanding every line of code. Building in public since day 68.
 
 

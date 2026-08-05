@@ -1,6 +1,7 @@
 import json
 from datetime import date
 import calendar
+import matplotlib.pyplot as plt
 
 def sauvegarder(data):
     with open("floww.json", "w") as f:
@@ -49,7 +50,9 @@ while True:
     print("2. Voir mon budget")
     print("3. Voir mes dépenses")
     print("4. Voir l'historique")
-    print("5. Quitter")
+    print("5. Voir le graphique d'épargne")
+    print("6. Voir le graphique des dépenses")
+    print("7. Quitter")
     choix = input("Ton choix : ")
 
     if choix == "1":
@@ -103,7 +106,37 @@ while True:
         else:            
             for mois, bilan in data["historique"].items():
                 print(f"{mois}: depensé {bilan["total_depenses"]}, epargné: {bilan["epargne"]}")
-            
 
     elif choix == "5":
+        mois_liste = []
+        epargne_liste = []
+        for mois, bilan in data["historique"].items():
+            mois_liste.append(mois)
+            epargne_liste.append(bilan["epargne"])
+        total = 0
+        for depense in data["depenses"]:
+            total += depense["montant"]
+        epargne_liste.append(data["revenu"] - total)
+        mois_liste.append(mois_actuel)
+        plt.bar(mois_liste,epargne_liste)
+        plt.title("Épargne mensuelle")
+        plt.ylabel("€")
+        plt.show()
+
+    elif choix == "6":
+        if not data["depenses"]:
+            print("Aucune dépense pour le moment.")
+        else:
+            noms_liste = []
+            montants_liste = []
+            for depense in data["depenses"]:
+                noms_liste.append(depense["nom"])
+                montants_liste.append(depense["montant"])
+
+            plt.pie(montants_liste, labels=noms_liste, autopct="%1.1f%%")
+            plt.title(f"Dépenses de {data['mois']}")
+            plt.show()
+
+
+    elif choix == "7":
         break

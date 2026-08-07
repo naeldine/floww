@@ -1,5 +1,5 @@
-from flask import Flask
-from floww import charger
+from flask import Flask, request, redirect 
+from floww import charger, sauvegarder
 from datetime import date 
 import calendar
 
@@ -32,6 +32,21 @@ def accueil():
     <p>Tu peux dépenser {round(budget_par_jour, 2)} €/jour pendant {jours_restant} jours</p>
     <h2>Dépenses du mois</h2>
     <ul>{liste_html}</ul>
+
+    <h2>Ajouter une dépense</h2>
+    <form method="post" action="/ajouter">
+        <input name="nom" placeholder="Nom de la dépense">
+        <input name="montant" placeholder="Montant" type="number" step="0.01">
+        <button type="submit">Ajouter</button>
+    </form>
     """
+@app.route("/ajouter", methods=["POST"])
+def ajouter():
+    data = charger()
+    nom = request.form["nom"]
+    montant = float(request.form["montant"])
+    data["depenses"].append({"nom": nom, "montant": montant})
+    sauvegarder(data)
+    return redirect("/")
 
 app.run(debug=True)

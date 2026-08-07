@@ -19,6 +19,7 @@ Philosophy: Make managing money “as easy as saying hello”—no stress, no co
 ```
 pip install matplotlib
 python floww.py
+python floww_web.py
 ```
 
 When you first launch FLOWW, it asks for your monthly income and your savings goal,
@@ -35,7 +36,7 @@ Python + matplotlib for charts. The data is stored in a local
 - [x] Phase 2 — JSON Persistence
 - [x] Phase 3 — Projections and monthly history
 - [x] Phase 4 — Graphical visualization (matplotlib)
-- [ ] Phase 5 — Web interface (Flask)
+- [x] Phase 5 — Web interface (Flask)
 
 ## Background
 

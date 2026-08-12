@@ -42,9 +42,12 @@ def accueil():
     """
 @app.route("/ajouter", methods=["POST"])
 def ajouter():
+    try:        
+        montant = float(request.form["montant"])
+    except ValueError:
+        return redirect("/")
     data = charger()
     nom = request.form["nom"]
-    montant = float(request.form["montant"])
     data["depenses"].append({"nom": nom, "montant": montant})
     sauvegarder(data)
     return redirect("/")

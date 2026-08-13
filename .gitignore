@@ -1,2 +1,5 @@
 floww.json
 test_date.py
+test*.py
+*.db
+test.db

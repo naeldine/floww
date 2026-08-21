@@ -62,6 +62,14 @@ def historique():
     conn.close()
     return resultat
 
+def revenu_(mois):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT revenu FROM mois WHERE mois = ?", (mois,))
+    resultat = cur.fetchone()[0]
+    conn.close()
+    return resultat
+
 
 if __name__ == "__main__":
     mois_actuel = f"{date.today().year}-{date.today().month:02d}"
@@ -122,14 +130,14 @@ if __name__ == "__main__":
 
         elif choix == "4":
             for mois, total in historique():
-                print(f"{mois} : dépense total : {total}€ epargne : {revenu - total}€")
+                print(f"{mois} : dépense total : {total}€ epargne : {revenu_(mois) - total}€")
 
         elif choix == "5":
             mois_liste = []
             epargne_liste = []
             for mois, bilan in historique():
                 mois_liste.append(mois)
-                epargne_liste.append(revenu - bilan)
+                epargne_liste.append(revenu_(mois) - bilan)
 
             plt.bar(mois_liste,epargne_liste)
             plt.title("Épargne mensuelle")

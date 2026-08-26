@@ -1,48 +1,76 @@
-import json
+import sqlite3
 from datetime import date
 import calendar
 import matplotlib.pyplot as plt
 
-def sauvegarder(data):
-    with open("floww.json", "w") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+def connexion():
+    return sqlite3.connect("floww.db")
 
-def charger():
-    try:
-        with open("floww.json", "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {"mois": f"{date.today().year}-{date.today().month:02d}", "revenu": 0, "objectif_epargne": 0, "depenses": [], "historique": {}}
+def get_config():
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT revenu, objectif_epargne FROM config")
+    resultat = cur.fetchone()
+    conn.close()
+    return resultat
+
+def assurer_mois(mois):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT mois FROM mois WHERE mois = ?", (mois,))
+    resultat = cur.fetchone()
+    if resultat is None:
+       revenu, objectif = get_config()
+       cur.execute("INSERT INTO mois (mois, revenu, objectif_epargne) VALUES (?, ?, ?)", (mois, revenu, objectif))
+       conn.commit()
+       pass
+    conn.close()
+
+def ajouter_depense(nom, montant, mois):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO depenses (nom, montant, mois) VALUES (?, ?, ?)", (nom, montant, mois))
+    conn.commit()
+    conn.close()
+
+def depenses_du_mois(mois):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT nom, montant FROM depenses WHERE mois = ?", (mois,))
+    resultat = cur.fetchall()
+    conn.close()
+    return resultat
+
+def total_du_mois(mois):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT COALESCE(SUM(montant), 0) FROM depenses WHERE mois = ?", (mois,))
+    resultat = cur.fetchall()[0][0]  
+    conn.close()
+    return resultat
+
+def historique():
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT mois, SUM(montant) FROM depenses GROUP BY mois")
+    resultat = cur.fetchall()
+    conn.close()
+    return resultat
+
+def revenus_precedants(mois):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT revenu FROM mois WHERE mois = ?", (mois,))
+    resultat = cur.fetchone()[0]
+    conn.close()
+    return resultat
+
 
 if __name__ == "__main__":
-    data = charger()
-
-
-    if "mois" not in data:
-        data["mois"] = "2026-07"
-    if "historique" not in data:
-        data["historique"] = {} 
-
-
     mois_actuel = f"{date.today().year}-{date.today().month:02d}"
-    if data["mois"] != mois_actuel:
-        total = 0
-        for depense in data["depenses"]:
-            total += depense["montant"]
-        epargne = data["revenu"] - total      
-        data["historique"][data["mois"]] = {"total_depenses": total, "epargne": epargne}
-        data["depenses"] = []
-        data["mois"] = mois_actuel
-        sauvegarder(data)
-        print(f"Nouveau mois ! {data['mois']} commence, l'ancien est archivé.")
+    assurer_mois(mois_actuel)
+    revenu, objectif = get_config()
 
-
-
-    # Premier lancement : si le revenu est à 0, on demande la config
-    if data["revenu"] == 0:
-        data["revenu"] = float(input("Ton revenu mensuel : "))
-        data["objectif_epargne"] = float(input("Ton objectif d'épargne : "))
-        sauvegarder(data)
     while True:
         print("\n--- FLOWW ---")
         print("1. Ajouter une dépense")
@@ -55,85 +83,80 @@ if __name__ == "__main__":
         choix = input("Ton choix : ")
 
         if choix == "1":
-            #  demander nom et montant, puis ajouter
             try:
-                data["depenses"].append({"nom":input("Nom de la dépense : "), "montant": float(input("Montant de la dépense : "))})
-                sauvegarder(data)
+                nom = input("Nom de la dépense : ")
+                montant = float(input("Montant de la dépense : "))
+                ajouter_depense(nom, montant, mois_actuel)
             except ValueError:
                 print("Montant invalide, réessaie.")
-            # {"nom": .E.., "montant": ...} à la liste data["depenses"] 
-            
-        elif choix == "2": 
-        #  calculer le total des dépenses,
-            total = 0
-            for depense in data["depenses"]:
-                total += depense["montant"]
+
+        elif choix == "2":
+            total = total_du_mois(mois_actuel)
             print(f"Total des depenses : {total}\n")
-
-            #   afficher : revenu - objectif_epargne - total = budget restant
-            budget_restant = data["revenu"] - data["objectif_epargne"] - total
+            
+            
+            budget_restant = revenu - objectif - total
             print(f"Budget restant : {budget_restant}")
-
-            # calculer le nombre de jours restant dans le mois
+            
+            
             aujourdhui = date.today()
             jours_dans_mois = calendar.monthrange(aujourdhui.year, aujourdhui.month)[1]
             jours_restant = jours_dans_mois - aujourdhui.day + 1
             budget_par_jour = budget_restant / jours_restant
-            #   afficher le budget restant, le nombre de jours restant et le budget par jour
-            print(f"Il te reste {round(budget_restant, 2)}€ pour {jours_restant} jours soit {round(budget_par_jour, 2)}€/jour max")
 
+            
+            print(f"Il te reste {round(budget_restant, 2)}€ pour {jours_restant} jours soit {round(budget_par_jour, 2)}€/jour max")
             rythme = total / aujourdhui.day
             depense_projetees = rythme * jours_dans_mois
-            epargne_projetee = data["revenu"] - depense_projetees
-            #   afficher le rythme de dépense, les dépenses projetées et l'épargne projetée
+            epargne_projetee = revenu - depense_projetees
+
+            
             print(f"Rythme de depense : {round(rythme, 2)}€/jour, si tu continues à ce rythme, tu devrais dépenser {round(depense_projetees, 2)}€ ce mois ci et épargner {round(epargne_projetee, 2)}€")
-            #  afficher le rythme de dépense, les dépenses projetées et l'épargne projetée
-            if epargne_projetee >= data["objectif_epargne"]:
+
+            
+            if epargne_projetee >= objectif:
                 print(f"Tu es donc dans les clous ! Tu devrais epargner {round(epargne_projetee, 2)} € ce mois-ci")
             else:
-                print(f"Attention ! Tu devrais epargner {round(epargne_projetee, 2)} € ce mois-ci, soit moins que ton objectif de {data['objectif_epargne']} €")
+                print(f"Attention ! Tu devrais epargner {round(epargne_projetee, 2)} € ce mois-ci, soit moins que ton objectif de {objectif} €")
 
         elif choix == "3":
-            chaque_depense = ''
-            for depense in data["depenses"]:
-                chaque_depense += f"{depense['nom']} : {depense['montant']}\n"
-            print(chaque_depense)
+            for nom, montant in depenses_du_mois(mois_actuel):
+                print(f"{nom} : {montant}€")
 
         elif choix == "4":
-            if data["historique"] == {}:
-                        print("Aucun historique pour le moment.")
-            else:            
-                for mois, bilan in data["historique"].items():
-                    print(f"{mois}: depensé {bilan["total_depenses"]}, epargné: {bilan["epargne"]}")
+            for mois, total in historique():
+                print(f"{mois} : dépense total : {total}€ epargne : {revenus_precedants(mois) - total}€")
 
         elif choix == "5":
             mois_liste = []
             epargne_liste = []
-            for mois, bilan in data["historique"].items():
+            for mois, bilan in historique():
                 mois_liste.append(mois)
-                epargne_liste.append(bilan["epargne"])
-            total = 0
-            for depense in data["depenses"]:
-                total += depense["montant"]
-            epargne_liste.append(data["revenu"] - total)
-            mois_liste.append(mois_actuel)
+                epargne_liste.append(revenus_precedants(mois) - bilan)
+
             plt.bar(mois_liste,epargne_liste)
             plt.title("Épargne mensuelle")
             plt.ylabel("€")
             plt.show()
 
         elif choix == "6":
-            if not data["depenses"]:
+            if not depenses_du_mois(mois_actuel):
                 print("Aucune dépense pour le moment.")
             else:
                 noms_liste = []
                 montants_liste = []
-                for depense in data["depenses"]:
-                    noms_liste.append(depense["nom"])
-                    montants_liste.append(depense["montant"])
+                for nom, montant in depenses_du_mois(mois_actuel):
+                    noms_liste.append(nom)
+                    montants_liste.append(montant)
                 plt.pie(montants_liste, labels=noms_liste, autopct="%1.1f%%")
-                plt.title(f"Dépenses de {data['mois']}")
+                plt.title(f"Dépenses de {mois_actuel}")
                 plt.show()
+
 
         elif choix == "7":
             break
+
+
+    
+
+

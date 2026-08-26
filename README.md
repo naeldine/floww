@@ -12,7 +12,7 @@ Philosophy: Make managing money “as easy as saying hello”—no stress, no co
 - Alert if you’re at risk of missing your savings goal
 - Automatic month change: balance archived and reset to zero
 - History of past months (total expenses, actual savings)
-- Data saved in JSON—nothing is lost between sessions
+- Data saved in a SQLite database—nothing is lost between sessions
 
 ## How to Use
 
@@ -28,7 +28,7 @@ and then you’re good to go.
 ## Stack
 
 Python + matplotlib for charts. The data is stored in a local
-`floww.json` file (unversioned).
+SQLite database (`floww.db`, unversioned).
 
 ## Roadmap
 
@@ -37,6 +37,7 @@ Python + matplotlib for charts. The data is stored in a local
 - [x] Phase 3 — Projections and monthly history
 - [x] Phase 4 — Graphical visualization (matplotlib)
 - [x] Phase 5 — Web interface (Flask)
+- [x] Phase 6 — SQLite migration — terminal + web
 
 ## Background
 

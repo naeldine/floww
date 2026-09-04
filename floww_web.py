@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect
-from floww import connexion, get_config, assurer_mois, ajouter_depense, depenses_du_mois, total_du_mois, revenus_precedants
+from floww import connexion, get_config, assurer_mois, ajouter_depense, depenses_du_mois, total_du_mois, revenus_precedants, supprimer_depense
 from datetime import date
 import calendar
 
@@ -21,8 +21,15 @@ def accueil():
     budget_par_jour = budget_restant / jours_restant
 
     liste_html = ""
-    for nom, montant in depenses_du_mois(mois_actuel):
-        liste_html += f"<li>{nom} : {montant} €</li>"
+    for id_depense, nom, montant in depenses_du_mois(mois_actuel):
+        liste_html += f"""<li> {id_depense} - {nom} : {montant} €
+        <form method="post" action="/supprimer" style="display:inline">
+        <input type="hidden" name="id" value="{id_depense}">
+        <button type="submit">Supprimer</button>
+        </form>
+        </li>"""
+         
+
 
     return f"""
     <h1>FLOWW 💸</h1>
@@ -37,6 +44,7 @@ def accueil():
     <button type="submit">Ajouter</button>
     </form>
     """
+    
 
 @app.route("/ajouter", methods=["POST"])
 def ajouter():
@@ -48,6 +56,15 @@ def ajouter():
     nom = request.form["nom"]
     revenu, objectif = get_config()
     ajouter_depense(nom, montant, mois_actuel)
+    return redirect("/")
+
+@app.route("/supprimer", methods=["POST"])
+def supprimer():
+    try:        
+        id_depense = int(request.form["id"])
+    except ValueError:
+        return redirect("/")
+    supprimer_depense(id_depense)
     return redirect("/")
 
 app.run(debug=True)

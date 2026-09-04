@@ -36,7 +36,7 @@ def ajouter_depense(nom, montant, mois):
 def depenses_du_mois(mois):
     conn = connexion()
     cur = conn.cursor()
-    cur.execute("SELECT nom, montant FROM depenses WHERE mois = ?", (mois,))
+    cur.execute("SELECT id, nom, montant FROM depenses WHERE mois = ?", (mois,))
     resultat = cur.fetchall()
     conn.close()
     return resultat
@@ -65,6 +65,20 @@ def revenus_precedants(mois):
     conn.close()
     return resultat
 
+def supprimer_depense(id):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM depenses WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+def modifier_depense(id, nouveau_nom, nouveau_montant):
+    conn = connexion()
+    cur = conn.cursor()
+    cur.execute("UPDATE depenses SET nom = ?, montant = ? WHERE id = ?", (nouveau_nom, nouveau_montant, id))
+    conn.commit()
+    conn.close()
+
 
 if __name__ == "__main__":
     mois_actuel = f"{date.today().year}-{date.today().month:02d}"
@@ -79,7 +93,9 @@ if __name__ == "__main__":
         print("4. Voir l'historique")
         print("5. Voir le graphique d'épargne")
         print("6. Voir le graphique des dépenses")
-        print("7. Quitter")
+        print("7. Supprimer une dépense")
+        print("8. Modifier une dépense")
+        print("9. Quitter")
         choix = input("Ton choix : ")
 
         if choix == "1":
@@ -120,8 +136,8 @@ if __name__ == "__main__":
                 print(f"Attention ! Tu devrais epargner {round(epargne_projetee, 2)} € ce mois-ci, soit moins que ton objectif de {objectif} €")
 
         elif choix == "3":
-            for nom, montant in depenses_du_mois(mois_actuel):
-                print(f"{nom} : {montant}€")
+            for id_depense, nom, montant in depenses_du_mois(mois_actuel):
+                print(f"n°{id_depense} : {nom} : {montant}€")
 
         elif choix == "4":
             for mois, total in historique():
@@ -145,7 +161,7 @@ if __name__ == "__main__":
             else:
                 noms_liste = []
                 montants_liste = []
-                for nom, montant in depenses_du_mois(mois_actuel):
+                for id_depense, nom, montant in depenses_du_mois(mois_actuel):
                     noms_liste.append(nom)
                     montants_liste.append(montant)
                 plt.pie(montants_liste, labels=noms_liste, autopct="%1.1f%%")
@@ -154,9 +170,43 @@ if __name__ == "__main__":
 
 
         elif choix == "7":
+            for id_depense, nom, montant in depenses_du_mois(mois_actuel):
+                print(f"n°{id_depense} : {nom} : {montant}€")
+            try:
+                id_a_supprimer = int(input("id de la dépense à supprimer : "))
+                supprimer_depense(id_a_supprimer)
+            except ValueError:
+                print("id invalide.")
+
+        elif choix == "8":
+            for id_depense, nom, montant in depenses_du_mois(mois_actuel):
+                print(f"n°{id_depense} : {nom} : {montant}€")
+            try:
+                id_a_modifier = int(input("id de la dépense à modifier : "))
+                nouveau_nom = input("Nouveau nom : ")
+                nouveau_montant = float(input("Nouveau montant : "))
+                modifier_depense(id_a_modifier, nouveau_nom, nouveau_montant)
+            except ValueError:
+                print("Saisie invalide.")
+
+        elif choix == "9":
             break
 
 
-    
+#             FLOWW
+#               │
+#       ┌───────┴────────┐
+#       ↓                ↓
+#    config             mois
+#       │                │
+# revenu + objectif    2026-08
+#                        │
+#                        ↓
+#                    depenses
+#                        │
+#          ┌─────────────┼─────────────┐
+#          ↓             ↓             ↓
+#       chips         ventilo         café
+#        2.60€         50€           1.50€
 
 
